@@ -43,6 +43,11 @@ body {
 }
 
 /* Custom scrollbar for navigation */
+.nav-content {
+    scrollbar-width: thin;
+    scrollbar-color: #7f8c8d #34495e;
+}
+
 .nav-content::-webkit-scrollbar {
     width: 8px;
 }
@@ -662,6 +667,6 @@ body {
     }
     
     .table-container {
-        overflow-x: scroll;
+        overflow-x: auto;
     }
 }
