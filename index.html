@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port Statistics Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Left Navigation -->
+    <nav class="left-nav">
+        <div class="nav-header">
+            <h2>메뉴</h2>
+        </div>
+        <div class="nav-content">
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">대시보드</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">🔌</span>
+                    <span class="nav-text">포트 관리</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">통계</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">설정</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">로그</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">사용자</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">🔔</span>
+                    <span class="nav-text">알림</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-text">자원</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-text">검색</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">💾</span>
+                    <span class="nav-text">백업</span>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="logo">
+                    <span class="logo-icon">🚀</span>
+                    <span class="logo-text">Port Management</span>
+                </div>
+            </div>
+            <div class="top-bar-center">
+                <div class="search-bar">
+                    <input type="text" placeholder="검색..." class="search-input">
+                    <button class="search-btn">🔍</button>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <button class="top-btn">새로고침</button>
+                <button class="top-btn">내보내기</button>
+                <button class="notification-btn">
+                    <span class="notification-icon">🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-profile">
+                    <span class="user-icon">👤</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Top Section with Options -->
+            <section class="content-header">
+                <div class="selection-area">
+                    <div class="select-group">
+                        <label for="port-select">포트 선택:</label>
+                        <select id="port-select" class="select-dropdown">
+                            <option value="all">전체 포트</option>
+                            <option value="port1">포트 1</option>
+                            <option value="port2">포트 2</option>
+                            <option value="port3">포트 3</option>
+                        </select>
+                    </div>
+                    <div class="select-group">
+                        <label for="time-range">시간 범위:</label>
+                        <select id="time-range" class="select-dropdown">
+                            <option value="1h">최근 1시간</option>
+                            <option value="24h">최근 24시간</option>
+                            <option value="7d">최근 7일</option>
+                            <option value="30d">최근 30일</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="option-buttons">
+                    <button class="option-btn">필터</button>
+                    <button class="option-btn">정렬</button>
+                    <button class="option-btn primary">적용</button>
+                </div>
+            </section>
+
+            <!-- Graph Area -->
+            <section class="graph-section">
+                <h2 class="section-title">포트 통계 시각화</h2>
+                <div class="graph-container">
+                    <div class="graph-card">
+                        <h3 class="graph-title">트래픽 현황</h3>
+                        <div class="graph-placeholder">
+                            <svg viewBox="0 0 400 200" class="graph-svg">
+                                <polyline points="0,180 50,150 100,120 150,140 200,100 250,80 300,90 350,60 400,50" 
+                                          fill="none" stroke="#4CAF50" stroke-width="2"/>
+                                <polyline points="0,190 50,170 100,160 150,165 200,140 250,130 300,135 350,120 400,110" 
+                                          fill="none" stroke="#2196F3" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="graph-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: #4CAF50;"></span> 수신</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #2196F3;"></span> 송신</span>
+                        </div>
+                    </div>
+                    <div class="graph-card">
+                        <h3 class="graph-title">포트 사용률</h3>
+                        <div class="graph-placeholder">
+                            <div class="bar-chart">
+                                <div class="bar" style="height: 70%;">
+                                    <span class="bar-label">포트 1</span>
+                                </div>
+                                <div class="bar" style="height: 45%;">
+                                    <span class="bar-label">포트 2</span>
+                                </div>
+                                <div class="bar" style="height: 90%;">
+                                    <span class="bar-label">포트 3</span>
+                                </div>
+                                <div class="bar" style="height: 60%;">
+                                    <span class="bar-label">포트 4</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Table Area -->
+            <section class="table-section">
+                <div class="table-header">
+                    <h2 class="section-title">포트 데이터 테이블</h2>
+                    <div class="table-controls">
+                        <input type="text" placeholder="테이블 검색..." class="table-search">
+                        <button class="table-btn">필터 적용</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>포트 번호</th>
+                                <th>상태</th>
+                                <th>트래픽 (MB)</th>
+                                <th>사용률 (%)</th>
+                                <th>연결 수</th>
+                                <th>마지막 업데이트</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>포트 1</td>
+                                <td><span class="status-badge active">활성</span></td>
+                                <td>1,234.5</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 70%;"></div>
+                                        <span class="progress-text">70%</span>
+                                    </div>
+                                </td>
+                                <td>156</td>
+                                <td>2분 전</td>
+                                <td>
+                                    <button class="action-btn">상세</button>
+                                    <button class="action-btn">설정</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>포트 2</td>
+                                <td><span class="status-badge active">활성</span></td>
+                                <td>892.3</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 45%;"></div>
+                                        <span class="progress-text">45%</span>
+                                    </div>
+                                </td>
+                                <td>98</td>
+                                <td>5분 전</td>
+                                <td>
+                                    <button class="action-btn">상세</button>
+                                    <button class="action-btn">설정</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>포트 3</td>
+                                <td><span class="status-badge warning">경고</span></td>
+                                <td>2,156.7</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill warning" style="width: 90%;"></div>
+                                        <span class="progress-text">90%</span>
+                                    </div>
+                                </td>
+                                <td>234</td>
+                                <td>1분 전</td>
+                                <td>
+                                    <button class="action-btn">상세</button>
+                                    <button class="action-btn">설정</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>포트 4</td>
+                                <td><span class="status-badge active">활성</span></td>
+                                <td>1,456.2</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 60%;"></div>
+                                        <span class="progress-text">60%</span>
+                                    </div>
+                                </td>
+                                <td>187</td>
+                                <td>3분 전</td>
+                                <td>
+                                    <button class="action-btn">상세</button>
+                                    <button class="action-btn">설정</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>포트 5</td>
+                                <td><span class="status-badge inactive">비활성</span></td>
+                                <td>0.0</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%;"></div>
+                                        <span class="progress-text">0%</span>
+                                    </div>
+                                </td>
+                                <td>0</td>
+                                <td>1시간 전</td>
+                                <td>
+                                    <button class="action-btn">상세</button>
+                                    <button class="action-btn">설정</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="pagination">
+                        <button class="page-btn">&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                    <div class="table-info">
+                        총 5개 항목 중 1-5 표시
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
