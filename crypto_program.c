@@ -16,9 +16,7 @@ void handle_openssl_error(void) {
 }
 
 // Generate random key and IV, then save to file
-int generate_and_save_key_iv(const char *key_file) {
-    unsigned char key[KEY_SIZE];
-    unsigned char iv[IV_SIZE];
+int generate_and_save_key_iv(const char *key_file, unsigned char *key, unsigned char *iv) {
     FILE *fp;
 
     // Generate random key and IV
@@ -91,13 +89,8 @@ int encrypt_file(const char *input_file, const char *output_file, const char *ke
     FILE *in_fp, *out_fp;
     EVP_CIPHER_CTX *ctx;
 
-    // Generate and save key and IV
-    if (!generate_and_save_key_iv(key_file)) {
-        return 0;
-    }
-
-    // Load the key and IV we just generated
-    if (!load_key_iv(key_file, key, iv)) {
+    // Generate and save key and IV directly to the buffers
+    if (!generate_and_save_key_iv(key_file, key, iv)) {
         return 0;
     }
 
@@ -258,10 +251,6 @@ int main(int argc, char *argv[]) {
     const char *input_file = argv[2];
     const char *output_file = argv[3];
 
-    // Initialize OpenSSL
-    ERR_load_crypto_strings();
-    OpenSSL_add_all_algorithms();
-
     int success = 0;
     if (strcmp(mode, "encrypt") == 0) {
         success = encrypt_file(input_file, output_file, KEY_FILE);
@@ -272,10 +261,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Use 'encrypt' or 'decrypt'\n");
         return EXIT_FAILURE;
     }
-
-    // Clean up OpenSSL
-    EVP_cleanup();
-    ERR_free_strings();
 
     return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
