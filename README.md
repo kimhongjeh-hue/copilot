@@ -33,11 +33,7 @@ A C program that encrypts and decrypts text files using OpenSSL's AES-256-CBC en
 
 ### Usage
 
-The program supports both modern option-style and backward-compatible command formats.
-
-#### Modern Option Style (Recommended)
-
-##### Encryption
+#### Encryption
 To encrypt a file using short options:
 ```bash
 ./crypto_program -e input.txt encrypted.bin
@@ -55,7 +51,7 @@ This will:
 - Encrypt the file using AES-256-CBC
 - Write the encrypted data to `encrypted.bin`
 
-##### Decryption
+#### Decryption
 To decrypt a file using short options:
 ```bash
 ./crypto_program -d encrypted.bin output.txt
@@ -72,20 +68,12 @@ This will:
 - Decrypt the data using AES-256-CBC
 - Write the decrypted plaintext to `output.txt`
 
-##### Help
+#### Help
 To display usage information:
 ```bash
 ./crypto_program -h
 # or
 ./crypto_program --help
-```
-
-#### Backward Compatible Format
-
-For backward compatibility, the original command format is still supported:
-```bash
-./crypto_program encrypt input.txt encrypted.bin
-./crypto_program decrypt encrypted.bin output.txt
 ```
 
 ### Example
