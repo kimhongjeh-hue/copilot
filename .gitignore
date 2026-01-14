@@ -1,0 +1,24 @@
+# Build artifacts
+crypto_program
+*.o
+*.so
+*.a
+
+# Generated encryption files
+encrypted.bin
+output.txt
+
+# Test files
+input.txt
+
+# Editor files
+*~
+.*.swp
+.*.swo
+*.swp
+*.swo
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
