@@ -10,6 +10,6 @@ $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
 
 clean:
-	rm -f $(TARGET) key.bin encrypted.bin output.txt
+	rm -f $(TARGET) encrypted.bin output.txt
 
 .PHONY: all clean

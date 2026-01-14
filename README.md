@@ -3,13 +3,13 @@ repository for copilot
 
 ## AES-256-CBC File Encryption/Decryption Tool
 
-A C program that encrypts and decrypts text files using OpenSSL's AES-256-CBC encryption algorithm.
+A C program that encrypts and decrypts text files using OpenSSL's AES-256-CBC encryption algorithm with pre-shared keys.
 
 ### Features
 
 - **AES-256-CBC Encryption**: Industry-standard encryption algorithm
-- **Dynamic Key Generation**: Random key and IV generation for each encryption operation
-- **Key Management**: Automatic key/IV storage and retrieval
+- **Pre-shared Keys**: Uses pre-agreed key and IV pairs provided via command-line options
+- **Flexible Input**: Accepts keys and IVs in hexadecimal format
 - **Error Handling**: Comprehensive error handling for file I/O and OpenSSL operations
 - **Easy to Use**: Simple command-line interface
 
@@ -33,42 +33,34 @@ A C program that encrypts and decrypts text files using OpenSSL's AES-256-CBC en
 
 ### Usage
 
+The program requires a 256-bit key (64 hexadecimal characters) and a 128-bit IV (32 hexadecimal characters) to be provided via command-line options.
+
 #### Encryption
-To encrypt a file using short options:
+
+Using short options:
 ```bash
-./crypto_program -e input.txt encrypted.bin
+./crypto_program -e -k <KEY_HEX> -i <IV_HEX> input.txt encrypted.bin
 ```
 
-Or using long options:
+Using long options:
 ```bash
-./crypto_program --encrypt input.txt encrypted.bin
+./crypto_program --encrypt --key=<KEY_HEX> --iv=<IV_HEX> input.txt encrypted.bin
 ```
-
-This will:
-- Read the plaintext from `input.txt`
-- Generate a random 256-bit key and 128-bit IV
-- Save the key and IV to `key.bin`
-- Encrypt the file using AES-256-CBC
-- Write the encrypted data to `encrypted.bin`
 
 #### Decryption
-To decrypt a file using short options:
+
+Using short options:
 ```bash
-./crypto_program -d encrypted.bin output.txt
+./crypto_program -d -k <KEY_HEX> -i <IV_HEX> encrypted.bin output.txt
 ```
 
-Or using long options:
+Using long options:
 ```bash
-./crypto_program --decrypt encrypted.bin output.txt
+./crypto_program --decrypt --key=<KEY_HEX> --iv=<IV_HEX> encrypted.bin output.txt
 ```
-
-This will:
-- Read the key and IV from `key.bin`
-- Read the encrypted data from `encrypted.bin`
-- Decrypt the data using AES-256-CBC
-- Write the decrypted plaintext to `output.txt`
 
 #### Help
+
 To display usage information:
 ```bash
 ./crypto_program -h
@@ -79,39 +71,61 @@ To display usage information:
 ### Example
 
 ```bash
+# Define your pre-shared key and IV (in hexadecimal)
+KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+IV="fedcba9876543210fedcba9876543210"
+
 # Create a test file
 echo "This is a secret message!" > input.txt
 
-# Encrypt the file (using short option)
-./crypto_program -e input.txt encrypted.bin
+# Encrypt the file
+./crypto_program -e -k "$KEY" -i "$IV" input.txt encrypted.bin
 
-# Decrypt the file (using short option)
-./crypto_program -d encrypted.bin output.txt
+# Decrypt the file
+./crypto_program -d -k "$KEY" -i "$IV" encrypted.bin output.txt
 
 # Verify the decryption
 cat output.txt
 
-# Or use long options
-./crypto_program --encrypt input.txt encrypted.bin
-./crypto_program --decrypt encrypted.bin output.txt
+# Verify the decryption
+cat output.txt
 ```
+
+### Command-Line Options
+
+#### Required Options
+
+- `-k, --key=KEY`: 256-bit encryption key in hexadecimal format (64 characters)
+- `-i, --iv=IV`: 128-bit initialization vector in hexadecimal format (32 characters)
+
+#### Mode Options (one required)
+
+- `-e, --encrypt`: Encrypt the input file
+- `-d, --decrypt`: Decrypt the input file
+
+#### Other Options
+
+- `-h, --help`: Display help message
 
 ### Files Generated
 
-- **key.bin**: Contains the 32-byte encryption key and 16-byte IV (total 48 bytes)
 - **encrypted.bin**: The encrypted output file (binary data)
 - **output.txt**: The decrypted output file
 
 ### Security Notes
 
-- Keep `key.bin` secure - anyone with this file can decrypt your encrypted files
-- The key and IV are randomly generated for each encryption operation
-- Do not share or expose the `key.bin` file
+- **Keep your keys and IVs secure** - anyone with these values can decrypt your encrypted files
+- The key and IV must be pre-agreed and shared securely between parties
+- Use the same key and IV pair for encryption and decryption
+- Keys and IVs can be in lowercase, uppercase, or mixed case hexadecimal
 - The program uses OpenSSL's EVP interface for encryption/decryption
 
 ### Error Handling
 
 The program handles various error conditions:
+- Missing key or IV options
+- Invalid hexadecimal format for key or IV
+- Incorrect key or IV length
 - Missing or incorrect command-line arguments
 - File read/write errors
 - Invalid encryption/decryption operations
@@ -127,7 +141,8 @@ make clean
 ### Technical Details
 
 - **Algorithm**: AES-256-CBC (Advanced Encryption Standard with 256-bit key in Cipher Block Chaining mode)
-- **Key Size**: 256 bits (32 bytes)
-- **IV Size**: 128 bits (16 bytes)
+- **Key Size**: 256 bits (32 bytes / 64 hex characters)
+- **IV Size**: 128 bits (16 bytes / 32 hex characters)
 - **Block Size**: 128 bits (16 bytes)
 - **Library**: OpenSSL EVP interface
+- **Key/IV Input**: Hexadecimal string format

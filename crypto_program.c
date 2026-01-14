@@ -3,12 +3,11 @@
 #include <string.h>
 #include <getopt.h>
 #include <openssl/evp.h>
-#include <openssl/rand.h>
 #include <openssl/err.h>
+#include <ctype.h>
 
 #define KEY_SIZE 32  // AES-256 requires 32 bytes
 #define IV_SIZE 16   // AES block size is 16 bytes
-#define KEY_FILE "key.bin"
 
 // Function to handle OpenSSL errors
 void handle_openssl_error(void) {
@@ -16,84 +15,54 @@ void handle_openssl_error(void) {
     exit(EXIT_FAILURE);
 }
 
-// Generate random key and IV, then save to file
-int generate_and_save_key_iv(const char *key_file, unsigned char *key, unsigned char *iv) {
-    FILE *fp;
-
-    // Generate random key and IV
-    if (RAND_bytes(key, KEY_SIZE) != 1) {
-        fprintf(stderr, "Error generating random key\n");
-        handle_openssl_error();
-    }
-
-    if (RAND_bytes(iv, IV_SIZE) != 1) {
-        fprintf(stderr, "Error generating random IV\n");
-        handle_openssl_error();
-    }
-
-    // Save key and IV to file
-    fp = fopen(key_file, "wb");
-    if (!fp) {
-        perror("Error opening key file for writing");
+// Convert hex string to bytes
+int hex_to_bytes(const char *hex_str, unsigned char *bytes, int expected_len) {
+    int len = strlen(hex_str);
+    
+    // Check if hex string length is correct (2 hex chars per byte)
+    if (len != expected_len * 2) {
         return 0;
     }
-
-    if (fwrite(key, 1, KEY_SIZE, fp) != KEY_SIZE) {
-        fprintf(stderr, "Error writing key to file\n");
-        fclose(fp);
-        return 0;
+    
+    for (int i = 0; i < expected_len; i++) {
+        int high, low;
+        
+        // Convert high nibble
+        if (isdigit(hex_str[i * 2])) {
+            high = hex_str[i * 2] - '0';
+        } else if (hex_str[i * 2] >= 'a' && hex_str[i * 2] <= 'f') {
+            high = hex_str[i * 2] - 'a' + 10;
+        } else if (hex_str[i * 2] >= 'A' && hex_str[i * 2] <= 'F') {
+            high = hex_str[i * 2] - 'A' + 10;
+        } else {
+            return 0; // Invalid character
+        }
+        
+        // Convert low nibble
+        if (isdigit(hex_str[i * 2 + 1])) {
+            low = hex_str[i * 2 + 1] - '0';
+        } else if (hex_str[i * 2 + 1] >= 'a' && hex_str[i * 2 + 1] <= 'f') {
+            low = hex_str[i * 2 + 1] - 'a' + 10;
+        } else if (hex_str[i * 2 + 1] >= 'A' && hex_str[i * 2 + 1] <= 'F') {
+            low = hex_str[i * 2 + 1] - 'A' + 10;
+        } else {
+            return 0; // Invalid character
+        }
+        
+        bytes[i] = (high << 4) | low;
     }
-
-    if (fwrite(iv, 1, IV_SIZE, fp) != IV_SIZE) {
-        fprintf(stderr, "Error writing IV to file\n");
-        fclose(fp);
-        return 0;
-    }
-
-    fclose(fp);
-    printf("Key and IV saved to %s\n", key_file);
-    return 1;
-}
-
-// Load key and IV from file
-int load_key_iv(const char *key_file, unsigned char *key, unsigned char *iv) {
-    FILE *fp = fopen(key_file, "rb");
-    if (!fp) {
-        perror("Error opening key file for reading");
-        return 0;
-    }
-
-    if (fread(key, 1, KEY_SIZE, fp) != KEY_SIZE) {
-        fprintf(stderr, "Error reading key from file\n");
-        fclose(fp);
-        return 0;
-    }
-
-    if (fread(iv, 1, IV_SIZE, fp) != IV_SIZE) {
-        fprintf(stderr, "Error reading IV from file\n");
-        fclose(fp);
-        return 0;
-    }
-
-    fclose(fp);
-    printf("Key and IV loaded from %s\n", key_file);
+    
     return 1;
 }
 
 // Encrypt file using AES-256-CBC
-int encrypt_file(const char *input_file, const char *output_file, const char *key_file) {
-    unsigned char key[KEY_SIZE];
-    unsigned char iv[IV_SIZE];
+int encrypt_file(const char *input_file, const char *output_file, 
+                 const unsigned char *key, const unsigned char *iv) {
     unsigned char inbuf[1024];
     unsigned char outbuf[1024 + EVP_MAX_BLOCK_LENGTH];
     int inlen, outlen;
     FILE *in_fp, *out_fp;
     EVP_CIPHER_CTX *ctx;
-
-    // Generate and save key and IV directly to the buffers
-    if (!generate_and_save_key_iv(key_file, key, iv)) {
-        return 0;
-    }
 
     // Open input file
     in_fp = fopen(input_file, "rb");
@@ -161,19 +130,13 @@ int encrypt_file(const char *input_file, const char *output_file, const char *ke
 }
 
 // Decrypt file using AES-256-CBC
-int decrypt_file(const char *input_file, const char *output_file, const char *key_file) {
-    unsigned char key[KEY_SIZE];
-    unsigned char iv[IV_SIZE];
+int decrypt_file(const char *input_file, const char *output_file, 
+                 const unsigned char *key, const unsigned char *iv) {
     unsigned char inbuf[1024];
     unsigned char outbuf[1024 + EVP_MAX_BLOCK_LENGTH];
     int inlen, outlen;
     FILE *in_fp, *out_fp;
     EVP_CIPHER_CTX *ctx;
-
-    // Load key and IV from file
-    if (!load_key_iv(key_file, key, iv)) {
-        return 0;
-    }
 
     // Open input file
     in_fp = fopen(input_file, "rb");
@@ -243,26 +206,36 @@ int decrypt_file(const char *input_file, const char *output_file, const char *ke
 void print_usage(const char *program_name) {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  %s [OPTIONS] <input_file> <output_file>\n", program_name);
-    fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "\nRequired Options:\n");
+    fprintf(stderr, "  -k, --key=KEY    256-bit key in hexadecimal (64 hex characters)\n");
+    fprintf(stderr, "  -i, --iv=IV      128-bit IV in hexadecimal (32 hex characters)\n");
+    fprintf(stderr, "\nMode Options (one required):\n");
     fprintf(stderr, "  -e, --encrypt    Encrypt the input file\n");
     fprintf(stderr, "  -d, --decrypt    Decrypt the input file\n");
+    fprintf(stderr, "\nOther Options:\n");
     fprintf(stderr, "  -h, --help       Display this help message\n");
     fprintf(stderr, "\nExamples:\n");
-    fprintf(stderr, "  %s -e input.txt encrypted.bin\n", program_name);
-    fprintf(stderr, "  %s --encrypt input.txt encrypted.bin\n", program_name);
-    fprintf(stderr, "  %s -d encrypted.bin output.txt\n", program_name);
-    fprintf(stderr, "  %s --decrypt encrypted.bin output.txt\n", program_name);
+    fprintf(stderr, "  %s -e -k 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \\\n", program_name);
+    fprintf(stderr, "        -i 0123456789abcdef0123456789abcdef input.txt encrypted.bin\n");
+    fprintf(stderr, "  %s --decrypt --key=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \\\n", program_name);
+    fprintf(stderr, "        --iv=0123456789abcdef0123456789abcdef encrypted.bin output.txt\n");
 }
 
 int main(int argc, char *argv[]) {
     int encrypt_mode = -1; // -1: not set, 0: decrypt, 1: encrypt
     const char *input_file = NULL;
     const char *output_file = NULL;
+    const char *key_hex = NULL;
+    const char *iv_hex = NULL;
+    unsigned char key[KEY_SIZE];
+    unsigned char iv[IV_SIZE];
     
     // Parse options using getopt_long
     static struct option long_options[] = {
         {"encrypt", no_argument, 0, 'e'},
         {"decrypt", no_argument, 0, 'd'},
+        {"key", required_argument, 0, 'k'},
+        {"iv", required_argument, 0, 'i'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
@@ -270,7 +243,7 @@ int main(int argc, char *argv[]) {
     int opt;
     int option_index = 0;
     
-    while ((opt = getopt_long(argc, argv, "edh", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "edk:i:h", long_options, &option_index)) != -1) {
         switch (opt) {
             case 'e':
                 if (encrypt_mode != -1) {
@@ -285,6 +258,12 @@ int main(int argc, char *argv[]) {
                     return EXIT_FAILURE;
                 }
                 encrypt_mode = 0;
+                break;
+            case 'k':
+                key_hex = optarg;
+                break;
+            case 'i':
+                iv_hex = optarg;
                 break;
             case 'h':
                 print_usage(argv[0]);
@@ -312,11 +291,38 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    // Check if key was specified
+    if (key_hex == NULL) {
+        fprintf(stderr, "Error: Key is required. Use -k or --key option\n\n");
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // Check if IV was specified
+    if (iv_hex == NULL) {
+        fprintf(stderr, "Error: IV is required. Use -i or --iv option\n\n");
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // Convert hex strings to bytes
+    if (!hex_to_bytes(key_hex, key, KEY_SIZE)) {
+        fprintf(stderr, "Error: Invalid key format. Key must be %d hexadecimal characters (representing %d bytes)\n", 
+                KEY_SIZE * 2, KEY_SIZE);
+        return EXIT_FAILURE;
+    }
+
+    if (!hex_to_bytes(iv_hex, iv, IV_SIZE)) {
+        fprintf(stderr, "Error: Invalid IV format. IV must be %d hexadecimal characters (representing %d bytes)\n", 
+                IV_SIZE * 2, IV_SIZE);
+        return EXIT_FAILURE;
+    }
+
     int success = 0;
     if (encrypt_mode == 1) {
-        success = encrypt_file(input_file, output_file, KEY_FILE);
+        success = encrypt_file(input_file, output_file, key, iv);
     } else {
-        success = decrypt_file(input_file, output_file, KEY_FILE);
+        success = decrypt_file(input_file, output_file, key, iv);
     }
 
     return success ? EXIT_SUCCESS : EXIT_FAILURE;

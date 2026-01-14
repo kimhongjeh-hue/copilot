@@ -5,7 +5,6 @@ crypto_program
 *.a
 
 # Generated encryption files
-key.bin
 encrypted.bin
 output.txt
 
