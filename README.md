@@ -33,10 +33,19 @@ A C program that encrypts and decrypts text files using OpenSSL's AES-256-CBC en
 
 ### Usage
 
-#### Encryption
-To encrypt a file:
+The program supports both modern option-style and backward-compatible command formats.
+
+#### Modern Option Style (Recommended)
+
+##### Encryption
+To encrypt a file using short options:
 ```bash
-./crypto_program encrypt input.txt encrypted.bin
+./crypto_program -e input.txt encrypted.bin
+```
+
+Or using long options:
+```bash
+./crypto_program --encrypt input.txt encrypted.bin
 ```
 
 This will:
@@ -46,10 +55,15 @@ This will:
 - Encrypt the file using AES-256-CBC
 - Write the encrypted data to `encrypted.bin`
 
-#### Decryption
-To decrypt a file:
+##### Decryption
+To decrypt a file using short options:
 ```bash
-./crypto_program decrypt encrypted.bin output.txt
+./crypto_program -d encrypted.bin output.txt
+```
+
+Or using long options:
+```bash
+./crypto_program --decrypt encrypted.bin output.txt
 ```
 
 This will:
@@ -58,20 +72,40 @@ This will:
 - Decrypt the data using AES-256-CBC
 - Write the decrypted plaintext to `output.txt`
 
+##### Help
+To display usage information:
+```bash
+./crypto_program -h
+# or
+./crypto_program --help
+```
+
+#### Backward Compatible Format
+
+For backward compatibility, the original command format is still supported:
+```bash
+./crypto_program encrypt input.txt encrypted.bin
+./crypto_program decrypt encrypted.bin output.txt
+```
+
 ### Example
 
 ```bash
 # Create a test file
 echo "This is a secret message!" > input.txt
 
-# Encrypt the file
-./crypto_program encrypt input.txt encrypted.bin
+# Encrypt the file (using short option)
+./crypto_program -e input.txt encrypted.bin
 
-# Decrypt the file
-./crypto_program decrypt encrypted.bin output.txt
+# Decrypt the file (using short option)
+./crypto_program -d encrypted.bin output.txt
 
 # Verify the decryption
 cat output.txt
+
+# Or use long options
+./crypto_program --encrypt input.txt encrypted.bin
+./crypto_program --decrypt encrypted.bin output.txt
 ```
 
 ### Files Generated

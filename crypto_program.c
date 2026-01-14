@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
@@ -239,27 +240,93 @@ int decrypt_file(const char *input_file, const char *output_file, const char *ke
     return 1;
 }
 
+void print_usage(const char *program_name) {
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "  %s [OPTIONS] <input_file> <output_file>\n", program_name);
+    fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "  -e, --encrypt    Encrypt the input file\n");
+    fprintf(stderr, "  -d, --decrypt    Decrypt the input file\n");
+    fprintf(stderr, "  -h, --help       Display this help message\n");
+    fprintf(stderr, "\nExamples:\n");
+    fprintf(stderr, "  %s -e input.txt encrypted.bin\n", program_name);
+    fprintf(stderr, "  %s --encrypt input.txt encrypted.bin\n", program_name);
+    fprintf(stderr, "  %s -d encrypted.bin output.txt\n", program_name);
+    fprintf(stderr, "  %s --decrypt encrypted.bin output.txt\n", program_name);
+    fprintf(stderr, "\nBackward compatibility:\n");
+    fprintf(stderr, "  %s encrypt <input_file> <output_file>\n", program_name);
+    fprintf(stderr, "  %s decrypt <input_file> <output_file>\n", program_name);
+}
+
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        fprintf(stderr, "Usage:\n");
-        fprintf(stderr, "  Encrypt: %s encrypt <input_file> <output_file>\n", argv[0]);
-        fprintf(stderr, "  Decrypt: %s decrypt <input_file> <output_file>\n", argv[0]);
-        return EXIT_FAILURE;
+    int encrypt_mode = -1; // -1: not set, 0: decrypt, 1: encrypt
+    const char *input_file = NULL;
+    const char *output_file = NULL;
+    
+    // Check for backward compatibility (old format: program encrypt/decrypt input output)
+    if (argc == 4 && (strcmp(argv[1], "encrypt") == 0 || strcmp(argv[1], "decrypt") == 0)) {
+        encrypt_mode = (strcmp(argv[1], "encrypt") == 0) ? 1 : 0;
+        input_file = argv[2];
+        output_file = argv[3];
+    } else {
+        // Parse options using getopt_long
+        static struct option long_options[] = {
+            {"encrypt", no_argument, 0, 'e'},
+            {"decrypt", no_argument, 0, 'd'},
+            {"help", no_argument, 0, 'h'},
+            {0, 0, 0, 0}
+        };
+        
+        int opt;
+        int option_index = 0;
+        
+        while ((opt = getopt_long(argc, argv, "edh", long_options, &option_index)) != -1) {
+            switch (opt) {
+                case 'e':
+                    if (encrypt_mode != -1) {
+                        fprintf(stderr, "Error: Cannot specify both encrypt and decrypt\n");
+                        return EXIT_FAILURE;
+                    }
+                    encrypt_mode = 1;
+                    break;
+                case 'd':
+                    if (encrypt_mode != -1) {
+                        fprintf(stderr, "Error: Cannot specify both encrypt and decrypt\n");
+                        return EXIT_FAILURE;
+                    }
+                    encrypt_mode = 0;
+                    break;
+                case 'h':
+                    print_usage(argv[0]);
+                    return EXIT_SUCCESS;
+                default:
+                    print_usage(argv[0]);
+                    return EXIT_FAILURE;
+            }
+        }
+        
+        // Get input and output files from remaining arguments
+        if (optind + 2 == argc) {
+            input_file = argv[optind];
+            output_file = argv[optind + 1];
+        } else {
+            fprintf(stderr, "Error: Missing input or output file\n\n");
+            print_usage(argv[0]);
+            return EXIT_FAILURE;
+        }
+        
+        // Check if mode was specified
+        if (encrypt_mode == -1) {
+            fprintf(stderr, "Error: Must specify either -e/--encrypt or -d/--decrypt\n\n");
+            print_usage(argv[0]);
+            return EXIT_FAILURE;
+        }
     }
 
-    const char *mode = argv[1];
-    const char *input_file = argv[2];
-    const char *output_file = argv[3];
-
     int success = 0;
-    if (strcmp(mode, "encrypt") == 0) {
+    if (encrypt_mode == 1) {
         success = encrypt_file(input_file, output_file, KEY_FILE);
-    } else if (strcmp(mode, "decrypt") == 0) {
-        success = decrypt_file(input_file, output_file, KEY_FILE);
     } else {
-        fprintf(stderr, "Invalid mode: %s\n", mode);
-        fprintf(stderr, "Use 'encrypt' or 'decrypt'\n");
-        return EXIT_FAILURE;
+        success = decrypt_file(input_file, output_file, KEY_FILE);
     }
 
     return success ? EXIT_SUCCESS : EXIT_FAILURE;
